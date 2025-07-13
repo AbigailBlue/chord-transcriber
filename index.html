@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Transposition Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
+            color: #1e293b;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid #06b6d4;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
+        }
+
+        .transpose-btn {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
+        }
+
+        .transpose-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
+        }
+
+        .transpose-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            min-height: 600px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+        }
+
+        .panel-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .panel-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .original-panel .panel-header {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            color: #dc2626;
+            border-bottom-color: #fecaca;
+        }
+
+        .transposed-panel .panel-header {
+            background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+            color: #0369a1;
+            border-bottom-color: #bfdbfe;
+        }
+
+        .panel-content {
+            padding: 1.5rem;
+            height: 500px;
+            overflow-y: auto;
+            font-size: 0.95rem;
+        }
+
+        .song-content {
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #94a3b8;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        .transposed-content {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #f0f9ff;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #06b6d4;
+            font-size: 1rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .chord {
+            color: #0369a1;
+            font-weight: bold;
+            background: rgba(6, 182, 212, 0.1);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+        }
+
+        .input-area {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .input-area textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+            background: #f8fafc;
+        }
+
+        .input-area textarea:focus {
+            outline: none;
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
+        }
+
+        .input-area label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #9ca3af;
+            font-style: italic;
+            padding: 3rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 2px dashed #d1d5db;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 3rem;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 8px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0f2fe;
+            border-top: 4px solid #06b6d4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .key-info {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        .key-info.show {
+            display: block;
+        }
+
+        .key-info h4 {
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        }
+
+        .api-status {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        .api-status.show {
+            display: block;
+        }
+
+        .api-status.enabled {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
+        .api-status.disabled {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
+        .theory-explanation {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        .theory-explanation.show {
+            display: block;
+        }
+
+        .theory-explanation h4 {
+            color: #1e40af;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .theory-explanation .suggestion {
+            background: #f0f9ff;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            border-left: 4px solid #06b6d4;
+        }
+
+        @media (max-width: 1024px) {
+            .panels {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .panel-content {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎵 Music Transposition Tool</h1>
+        <p>Transpose songs to any key with AI-powered chord recognition</p>
+    </div>
+
+    <div class="container">
+        <div class="api-status" id="apiStatus">
+            <p><strong>AI Music Theory Assistant:</strong> <span id="apiStatusText">Checking...</span></p>
+        </div>
+
+        <div class="input-area">
+            <label for="songInput">Enter lyrics with chord symbols:</label>
+            <textarea id="songInput" placeholder="Example:
+[C]Let there be [F]peace on [G]earth
+And let it be[C]gin with [Am]me[Dm]
+[F]Let there be [G]peace on [Em]earth[Am]
+The [F]peace that was [G]meant to [C]be
+
+Supported formats: [C], C, (C)
+Complex chords: C7, Cmaj7, Csus4, C/E"></textarea>
+        </div>
+
+        <div class="controls">
+            <div class="select-wrapper">
+                <select id="fromKey">
+                    <option value="">Auto-detect key</option>
+                    <option value="C">C Major</option>
+                    <option value="C#">C# Major</option>
+                    <option value="Db">Db Major</option>
+                    <option value="D">D Major</option>
+                    <option value="D#">D# Major</option>
+                    <option value="Eb">Eb Major</option>
+                    <option value="E">E Major</option>
+                    <option value="F">F Major</option>
+                    <option value="F#">F# Major</option>
+                    <option value="Gb">Gb Major</option>
+                    <option value="G">G Major</option>
+                    <option value="G#">G# Major</option>
+                    <option value="Ab">Ab Major</option>
+                    <option value="A">A Major</option>
+                    <option value="A#">A# Major</option>
+                    <option value="Bb">Bb Major</option>
+                    <option value="B">B Major</option>
+                </select>
+            </div>
+            <div class="select-wrapper">
+                <select id="toKey">
+                    <option value="">Select target key</option>
+                    <option value="C">C Major</option>
+                    <option value="C#">C# Major</option>
+                    <option value="Db">Db Major</option>
+                    <option value="D">D Major</option>
+                    <option value="D#">D# Major</option>
+                    <option value="Eb">Eb Major</option>
+                    <option value="E">E Major</option>
+                    <option value="F">F Major</option>
+                    <option value="F#">F# Major</option>
+                    <option value="Gb">Gb Major</option>
+                    <option value="G">G Major</option>
+                    <option value="G#">G# Major</option>
+                    <option value="Ab">Ab Major</option>
+                    <option value="A">A Major</option>
+                    <option value="A#">A# Major</option>
+                    <option value="Bb">Bb Major</option>
+                    <option value="B">B Major</option>
+                </select>
+            </div>
+            <button class="transpose-btn" id="transposeBtn" disabled>
+                🎼 Transpose Song
+            </button>
+        </div>
+
+        <div class="key-info" id="keyInfo">
+            <h4>Transposition Details</h4>
+            <p id="keyInfoText"></p>
+        </div>
+
+        <div class="panels">
+            <div class="panel original-panel">
+                <div class="panel-header">
+                    <h3>🎶 Original Song</h3>
+                </div>
+                <div class="panel-content" id="originalContent">
+                    <div class="placeholder">
+                        Enter lyrics with chords above to see them highlighted here
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel transposed-panel">
+                <div class="panel-header">
+                    <h3>🎵 Transposed Song</h3>
+                    <div class="export-buttons" id="exportButtons" style="display: none;">
+                        <button class="export-btn" id="exportTXT">📝 TXT</button>
+                        <button class="export-btn" id="exportCopy">📋 Copy</button>
+                        <button class="export-btn" id="exportPrint">🖨️ Print</button>
+                    </div>
+                </div>
+                <div class="panel-content" id="transposedContent">
+                    <div class="placeholder">
+                        Select target key and click "Transpose Song" to see the result
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="theory-explanation" id="theoryExplanation">
+            <h4>🎓 Music Theory Insights</h4>
+            <div id="theoryContent">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Music theory constants
+        const CHROMATIC_SCALE = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const ENHARMONIC_EQUIVALENTS = {
+            'C#': 'Db', 'Db': 'C#',
+            'D#': 'Eb', 'Eb': 'D#', 
+            'F#': 'Gb', 'Gb': 'F#',
+            'G#': 'Ab', 'Ab': 'G#',
+            'A#': 'Bb', 'Bb': 'A#'
+        };
+
+        // Sample songs for testing
+        const SAMPLE_SONGS = {
+            "Let There Be Peace": `[C]Let there be [F]peace on [G]earth
+And let it be[C]gin with [Am]me[Dm]
+[F]Let there be [G]peace on [Em]earth[Am] 
+The [F]peace that was [G]meant to [C]be`,
+            
+            "Amazing Grace": `A[G]mazing [C]grace how [G]sweet the sound
+That [Em]saved a [D]wretch like [G]me
+I [G]once was [C]lost but [G]now am [Em]found
+Was [G]blind but [D]now I [G]see`,
+            
+            "Complex Chords": `[Cmaj7]Here comes the [F#dim]sun, doo-doo-doo-doo
+[G7sus4]Here comes the [C/E]sun, and I say
+[Am7]It's all [D7]right[G]`
+        };
+
+        // DOM elements
+        const songInput = document.getElementById('songInput');
+        const fromKey = document.getElementById('fromKey');
+        const toKey = document.getElementById('toKey');
+        const transposeBtn = document.getElementById('transposeBtn');
+        const originalContent = document.getElementById('originalContent');
+        const transposedContent = document.getElementById('transposedContent');
+        const keyInfo = document.getElementById('keyInfo');
+        const keyInfoText = document.getElementById('keyInfoText');
+        const exportButtons = document.getElementById('exportButtons');
+        const apiStatus = document.getElementById('apiStatus');
+        const apiStatusText = document.getElementById('apiStatusText');
+        const theoryExplanation = document.getElementById('theoryExplanation');
+        const theoryContent = document.getElementById('theoryContent');
+
+        // Event listeners
+        songInput.addEventListener('input', updateOriginalDisplay);
+        songInput.addEventListener('input', updateTransposeButton);
+        fromKey.addEventListener('change', updateTransposeButton);
+        toKey.addEventListener('change', updateTransposeButton);
+        transposeBtn.addEventListener('click', performTransposition);
+
+        // Export button listeners
+        document.getElementById('exportTXT').addEventListener('click', exportToTXT);
+        document.getElementById('exportCopy').addEventListener('click', copyToClipboard);
+        document.getElementById('exportPrint').addEventListener('click', printTransposition);
+
+        // Claude API integration (following KB-editor pattern)
+        async function initializeClaudeAPI() {
+            try {
+                const response = await fetch('/api/status');
+                console.log('Status response:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.log('Error response:', text);
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const status = await response.json();
+                
+                if (status.apiEnabled) {
+                    apiStatus.className = 'api-status show enabled';
+                    apiStatusText.textContent = status.status + ' - Enhanced music theory insights available';
+                } else {
+                    apiStatus.className = 'api-status show disabled';
+                    apiStatusText.textContent = status.status + ' - Basic transposition only';
+                }
+            } catch (error) {
+                console.error('Failed to check API status:', error);
+                apiStatus.className = 'api-status show disabled';
+                apiStatusText.textContent = 'AI Assistant Offline - Basic transposition available';
+            }
+        }
+
+        async function getAIEnhancedTransposition(originalText, fromKey, toKey) {
+            try {
+                const response = await fetch('/api/transpose', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        originalText: originalText,
+                        fromKey: fromKey,
+                        toKey: toKey,
+                        options: {
+                            explainTheory: true,
+                            suggestAlternatives: true,
+                            detectComplexChords: true
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'AI transposition failed');
+                }
+
+                return data.result;
+            } catch (error) {
+                console.error('AI enhanced transposition failed:', error);
+                return null;
+            }
+        }
+
+        function displayTheoryInsights(insights) {
+            if (!insights || !insights.explanation) return;
+
+            let content = `<div class="suggestion"><strong>Transposition:</strong> ${insights.explanation}</div>`;
+            
+            if (insights.suggestions && insights.suggestions.length > 0) {
+                content += '<div class="suggestion"><strong>Alternative Keys:</strong><ul>';
+                insights.suggestions.forEach(suggestion => {
+                    content += `<li>${suggestion}</li>`;
+                });
+                content += '</ul></div>';
+            }
+
+            if (insights.chordAnalysis) {
+                content += `<div class="suggestion"><strong>Chord Analysis:</strong> ${insights.chordAnalysis}</div>`;
+            }
+
+            theoryContent.innerHTML = content;
+            theoryExplanation.classList.add('show');
+        }
+
+        // Chord parsing functions
+        function parseChords(text) {
+            // Regex to match chord symbols in various formats: [C], C, (C)
+            // Supports complex chords: C7, Cmaj7, Csus4, C/E, etc.
+            const chordRegex = /(\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\])|(\b([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b)/g;
+            
+            const chords = [];
+            let match;
+            
+            while ((match = chordRegex.exec(text)) !== null) {
+                const chordSymbol = match[2] || match[4]; // Extract chord from either bracket or non-bracket format
+                const startPos = match.index;
+                const endPos = match.index + match[0].length;
+                
+                chords.push({
+                    symbol: chordSymbol,
+                    fullMatch: match[0],
+                    start: startPos,
+                    end: endPos,
+                    root: extractChordRoot(chordSymbol)
+                });
+            }
+            
+            return chords;
+        }
+
+        function extractChordRoot(chordSymbol) {
+            // Extract just the root note (e.g., "C" from "Cmaj7", "F#" from "F#m")
+            const rootMatch = chordSymbol.match(/^([A-G][#b]?)/);
+            return rootMatch ? rootMatch[1] : null;
+        }
+
+        function highlightChords(text) {
+            const chords = parseChords(text);
+            let result = text;
+            
+            // Process chords in reverse order to maintain string positions
+            for (let i = chords.length - 1; i >= 0; i--) {
+                const chord = chords[i];
+                const highlighted = `<span class="chord">${chord.fullMatch}</span>`;
+                result = result.substring(0, chord.start) + highlighted + result.substring(chord.end);
+            }
+            
+            return result;
+        }
+
+        // Music theory functions
+        function getSemitoneDistance(fromRoot, toRoot) {
+            const fromIndex = CHROMATIC_SCALE.indexOf(fromRoot);
+            const toIndex = CHROMATIC_SCALE.indexOf(toRoot);
+            
+            if (fromIndex === -1 || toIndex === -1) return 0;
+            
+            let distance = toIndex - fromIndex;
+            if (distance < 0) distance += 12;
+            
+            return distance;
+        }
+
+        function transposeChord(chordSymbol, semitones) {
+            const root = extractChordRoot(chordSymbol);
+            if (!root) return chordSymbol;
+            
+            const rootIndex = CHROMATIC_SCALE.indexOf(root);
+            if (rootIndex === -1) return chordSymbol;
+            
+            const newRootIndex = (rootIndex + semitones) % 12;
+            const newRoot = CHROMATIC_SCALE[newRootIndex];
+            
+            // Replace the root in the chord symbol
+            return chordSymbol.replace(/^[A-G][#b]?/, newRoot);
+        }
+
+        function detectKey(text) {
+            const chords = parseChords(text);
+            const rootCounts = {};
+            
+            // Count frequency of each root note
+            chords.forEach(chord => {
+                const root = chord.root;
+                if (root) {
+                    rootCounts[root] = (rootCounts[root] || 0) + 1;
+                }
+            });
+            
+            // Simple heuristic: most frequent root is likely the key
+            let mostFrequentRoot = null;
+            let maxCount = 0;
+            
+            for (const [root, count] of Object.entries(rootCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    mostFrequentRoot = root;
+                }
+            }
+            
+            return mostFrequentRoot;
+        }
+
+        function getKeyRelationship(fromKey, toKey) {
+            if (!fromKey || !toKey) return '';
+            
+            const semitones = getSemitoneDistance(fromKey, toKey);
+            const direction = semitones <= 6 ? 'up' : 'down';
+            const actualSemitones = direction === 'up' ? semitones : 12 - semitones;
+            
+            const intervalNames = {
+                0: 'same key',
+                1: 'minor second',
+                2: 'major second', 
+                3: 'minor third',
+                4: 'major third',
+                5: 'perfect fourth',
+                6: 'tritone',
+                7: 'perfect fifth'
+            };
+            
+            if (semitones === 0) return 'No transposition needed';
+            
+            const intervalName = intervalNames[actualSemitones] || `${actualSemitones} semitones`;
+            return `${direction} ${intervalName} (${direction === 'up' ? '+' : '-'}${actualSemitones} semitones)`;
+        }
+
+        // UI update functions
+        function updateOriginalDisplay() {
+            const text = songInput.value.trim();
+            
+            if (!text) {
+                originalContent.innerHTML = '<div class="placeholder">Enter lyrics with chords above to see them highlighted here</div>';
+                return;
+            }
+            
+            const highlighted = highlightChords(text);
+            originalContent.innerHTML = `<div class="song-content">${highlighted}</div>`;
+            
+            // Auto-detect key if not set
+            if (!fromKey.value) {
+                const detectedKey = detectKey(text);
+                if (detectedKey) {
+                    fromKey.value = detectedKey;
+                    updateTransposeButton();
+                }
+            }
+        }
+
+        function updateTransposeButton() {
+            const hasText = songInput.value.trim().length > 0;
+            const hasTargetKey = toKey.value.length > 0;
+            
+            transposeBtn.disabled = !hasText || !hasTargetKey;
+        }
+
+        async function performTransposition() {
+            const text = songInput.value.trim();
+            const sourceKey = fromKey.value || detectKey(text);
+            const targetKey = toKey.value;
+            
+            if (!text || !targetKey) {
+                alert('Please enter lyrics and select a target key');
+                return;
+            }
+            
+            // Show loading
+            transposedContent.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>🎼 Transposing to ${targetKey} major...</p>
+                    <p style="font-size: 0.9rem; opacity: 0.8;">AI enhancing with music theory insights...</p>
+                </div>
+            `;
+            
+            // Hide previous theory explanation
+            theoryExplanation.classList.remove('show');
+            
+            try {
+                // Try AI-enhanced transposition first
+                const aiResult = await getAIEnhancedTransposition(text, sourceKey || 'C', targetKey);
+                
+                if (aiResult && aiResult.transposedText) {
+                    // Use AI result
+                    transposedContent.innerHTML = `<div class="transposed-content">${aiResult.transposedText}</div>`;
+                    
+                    // Display AI insights
+                    displayTheoryInsights(aiResult);
+                    
+                    // Show key information with AI enhancement
+                    if (sourceKey) {
+                        const relationship = getKeyRelationship(sourceKey, targetKey);
+                        keyInfoText.textContent = `From ${sourceKey} major to ${targetKey} major: ${relationship}`;
+                        keyInfo.classList.add('show');
+                    }
+                } else {
+                    throw new Error('AI enhancement not available');
+                }
+                
+            } catch (error) {
+                console.log('Falling back to basic transposition:', error.message);
+                
+                // Fall back to basic transposition
+                setTimeout(() => {
+                    const semitones = getSemitoneDistance(sourceKey || 'C', targetKey);
+                    const transposedText = transposeText(text, semitones);
+                    
+                    transposedContent.innerHTML = `<div class="transposed-content">${transposedText}</div>`;
+                    
+                    // Show key information
+                    if (sourceKey) {
+                        const relationship = getKeyRelationship(sourceKey, targetKey);
+                        keyInfoText.textContent = `From ${sourceKey} major to ${targetKey} major: ${relationship}`;
+                        keyInfo.classList.add('show');
+                    }
+                    
+                }, 500);
+            }
+            
+            // Show export buttons
+            exportButtons.style.display = 'flex';
+        }
+
+        function transposeText(text, semitones) {
+            if (semitones === 0) return text;
+            
+            const chords = parseChords(text);
+            let result = text;
+            
+            // Process chords in reverse order to maintain string positions
+            for (let i = chords.length - 1; i >= 0; i--) {
+                const chord = chords[i];
+                const transposedChord = transposeChord(chord.symbol, semitones);
+                const newChordText = chord.fullMatch.replace(chord.symbol, transposedChord);
+                
+                result = result.substring(0, chord.start) + newChordText + result.substring(chord.end);
+            }
+            
+            return result;
+        }
+
+        // Export functions
+        function exportToTXT() {
+            const content = transposedContent.querySelector('.transposed-content');
+            if (!content) return;
+            
+            const textContent = content.textContent;
+            const blob = new Blob([textContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'transposed-song.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function copyToClipboard() {
+            const content = transposedContent.querySelector('.transposed-content');
+            if (!content) return;
+            
+            try {
+                await navigator.clipboard.writeText(content.textContent);
+                
+                // Temporary feedback
+                const originalText = document.getElementById('exportCopy').innerHTML;
+                document.getElementById('exportCopy').innerHTML = '✅ Copied!';
+                setTimeout(() => {
+                    document.getElementById('exportCopy').innerHTML = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy to clipboard:', err);
+                alert('Failed to copy to clipboard');
+            }
+        }
+
+        function printTransposition() {
+            const content = transposedContent.querySelector('.transposed-content');
+            if (!content) return;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Transposed Song</title>
+                    <style>
+                        body { font-family: monospace; margin: 20px; line-height: 1.8; }
+                        h1 { color: #1e40af; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Transposed Song</h1>
+                    <pre>${content.textContent}</pre>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Load sample song for demo
+        songInput.value = SAMPLE_SONGS["Let There Be Peace"];
+        updateOriginalDisplay();
+        
+        // Initialize Claude API on page load
+        initializeClaudeAPI();
+    </script>
+</body>
+</html>

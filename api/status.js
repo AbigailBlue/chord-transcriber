@@ -42,21 +42,23 @@ export default async function handler(req, res) {
             });
         } else {
             const error = await response.text();
-            console.error('Claude API error:', error);
+            console.error('Claude API error:', response.status, error);
             
             return res.status(200).json({
                 apiEnabled: false,
-                status: 'Claude API connection failed',
+                status: `Claude API connection failed: ${response.status}`,
+                error: error, // Add this temporarily for debugging
                 timestamp: new Date().toISOString()
             });
         }
 
     } catch (error) {
-        console.error('Status check error:', error);
+        console.error('Status check error:', error.message, error.stack);
         
         return res.status(200).json({
             apiEnabled: false,
             status: 'Unable to connect to Claude API',
+            error: error.message, // Add this temporarily for debugging
             timestamp: new Date().toISOString()
         });
     }

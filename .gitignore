@@ -1,0 +1,24 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Vercel
+.vercel
+
+# Node modules (if using local development)
+node_modules/
+
+# Windows Zone Identifier files
+*:Zone.Identifier
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed

@@ -1,7 +1,19 @@
 export default async function handler(req, res) {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Handle preflight request
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
     // Only allow POST requests
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
     }
 
     try {
@@ -50,7 +62,7 @@ Format your response as JSON with these fields:
 
 Make sure to preserve the exact formatting and structure of the original lyrics, only changing the chord symbols.`;
 
-        // Call Claude API
+        // Call Claude API (using same model as working KB-editor)
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -59,7 +71,7 @@ Make sure to preserve the exact formatting and structure of the original lyrics,
                 'anthropic-version': '2023-06-01'
             },
             body: JSON.stringify({
-                model: 'claude-3-sonnet-20240229',
+                model: 'claude-3-5-sonnet-latest',
                 max_tokens: 2000,
                 messages: [{
                     role: 'user',
@@ -69,12 +81,11 @@ Make sure to preserve the exact formatting and structure of the original lyrics,
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Claude API error:', errorText);
+            const errorData = await response.json();
+            console.error('Claude API Error:', errorData);
             
-            return res.status(500).json({
-                error: 'Failed to process transposition with Claude AI',
-                details: response.status
+            return res.status(response.status).json({
+                error: `Claude API Error: ${errorData.error?.message || 'Unknown error'}`
             });
         }
 

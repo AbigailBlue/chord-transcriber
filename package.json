@@ -1,0 +1,29 @@
+{
+  "name": "music-transposition-tool",
+  "version": "1.0.0",
+  "description": "AI-powered music transposition tool for musicians and educators",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build required'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "music",
+    "transposition", 
+    "chords",
+    "ai",
+    "claude",
+    "musicians",
+    "education"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/music-transposition-tool.git"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
